@@ -1,0 +1,51 @@
+
+--Example 1:
+With Total_Quantity_Sold as 
+ (
+ select p.pub_name, t.title,sum(s.qty) as total_sold
+From dbo.publishers as p inner join dbo.titles as t ON p.pub_id=t.pub_id
+inner join dbo.sales as s on s.title_id=t.title_id
+Group by p.pub_name, t.title
+)
+
+select pub_name, title, total_sold
+from total_Quantity_Sold as a
+Where total_sold = (select max(total_sold) from total_Quantity_Sold as b where a.pub_name = b.pub_name)
+Order by total_sold desc;
+
+--Example 2:
+
+;WITH Average_BOOK_Sold AS
+(
+    SELECT 
+        t.title,
+        SUM(s.qty) AS Total_Book_Sold
+    FROM titles AS t
+    INNER JOIN sales AS s 
+        ON s.title_id = t.title_id
+    GROUP BY t.title
+)
+
+SELECT 
+    title,
+    Total_Book_Sold
+FROM Average_BOOK_Sold
+WHERE Total_Book_Sold > 
+    (SELECT AVG(Total_Book_Sold) 
+     FROM Average_BOOK_Sold)
+ORDER BY Total_Book_Sold DESC;
+
+--Example 3:
+
+ With Total_Quantity_Sold as 
+ (
+ select p.pub_name, t.title,sum(s.qty) as total_sold,dense_rank() over (partition by p.pub_name order by sum(s.qty) desc) as rank
+From dbo.publishers as p inner join dbo.titles as t ON p.pub_id=t.pub_id
+inner join dbo.sales as s on s.title_id=t.title_id
+Group by p.pub_name, t.title
+)
+
+select pub_name, title, total_sold
+from total_Quantity_Sold as a
+Where rank =2
+Order by total_sold desc;
